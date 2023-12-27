@@ -61,6 +61,18 @@ export class ObservableGame {
     }, undefined);
   }
 
+  resetGame() {
+    this.endGame();
+    this.game_started = false;
+    this.word = "";
+    this.guessedLetters = [];
+    this.players = this.players.map((player) => {
+      player.letters = [];
+      player.score = 0;
+      return player;
+    });
+  }
+
   startGame() {
     const wordsArray = [
       "javascript",

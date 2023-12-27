@@ -52,10 +52,19 @@ const GameArea = observer(({ game }) => {
             <p>Game Ended! Winner: {game.getWinner().name}</p>
           )}
 
-          <button onClick={() => startGame()}>
-            {!game.game_started ? "Start" : "Reset"} Game
-          </button>
-          <button onClick={() => game.endGame()}>End Game</button>
+          {!game.game_started && (
+            <button onClick={startGame}>Start Game</button>
+          )}
+          {game.game_started && (
+            <>
+              {game.getGameEnded() && (
+                <button onClick={() => game.resetGame()}>Reset Game</button>
+              )}
+              {!game.getGameEnded() && (
+                <button onClick={() => game.resetGame()}>Stop Game</button>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
