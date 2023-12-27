@@ -4,6 +4,9 @@ import { getRandomBighead } from "../utils/bigHeadDataRandomizer";
 export class ObservableGame {
   static nextId = 0;
 
+  newPlayer = null;
+  addingNewPlayer = false;
+
   interval = null;
   players = [];
   guessedLetters = [];
@@ -13,38 +16,67 @@ export class ObservableGame {
   constructor() {
     makeObservable(this, {
       players: observable,
+      newPlayer: observable,
+      addingNewPlayer: observable,
       guessedLetters: observable,
       game_started: observable,
-      getWord: action,
-      getPlayersCount: action,
-      getGameEnded: action,
-      getWinner: action,
+      word: observable,
+      setNewPlayer: action,
+      isAddingNewPlayer: computed,
+      updateNewPlayer: action,
+      getWord: computed,
+      getPlayersCount: computed,
+      getGameEnded: computed,
+      getWinner: computed,
+      resetGame: action,
       startGame: action,
       endGame: action,
       setInterval: action,
       addPlayer: action,
       removePlayer: action,
-      renamePlayer: action,
-      generateHead: action,
       addScore: action,
       addLetter: action,
-      getGuessedLetters: action,
+      getGuessedLetters: computed,
       guessLetter: action,
     });
   }
 
-  getWord() {
-    console.log(this.word);
+  setNewPlayer(state) {
+    if (!state) {
+      this.newPlayer = null;
+      this.addingNewPlayer = state;
+      return;
+    }
+
+    this.newPlayer = {
+      name: "",
+      bighead: getRandomBighead(),
+    };
+    this.addingNewPlayer = state;
+  }
+
+  get isAddingNewPlayer() {
+    return this.addingNewPlayer;
+  }
+
+  updateNewPlayer(name, bighead) {
+    this.newPlayer = {
+      name: name,
+      bighead: bighead,
+    };
+  }
+
+  get getWord() {
     return this.word.split("").map((letter) => {
       return this.guessedLetters.includes(letter) ? letter : "_ ";
     });
   }
 
-  getPlayersCount() {
+  get getPlayersCount() {
     return this.players.length;
   }
 
-  getGameEnded() {
+  get getGameEnded() {
     return (
       this.game_started &&
       this.word.split("").every((letter) => {
@@ -53,7 +85,7 @@ export class ObservableGame {
     );
   }
 
-  getWinner() {
+  get getWinner() {
     return this.players.reduce((prev, current) => {
       return prev == undefined || prev.score < current.score ? current : prev;
     }, undefined);
@@ -116,36 +148,25 @@ export class ObservableGame {
     this.interval = setInterval(func, interval);
   }
 
-  addPlayer(name) {
+  addPlayer() {
     this.players.push({
       id: ObservableGame.nextId++,
-      name: name,
-      bighead: getRandomBighead(),
+      name: this.newPlayer.name,
+      bighead: this.newPlayer.bighead,
       score: 0,
       letters: [],
     });
+
+    this.newPlayer = null;
+    this.addingNewPlayer = false;
   }
 
   removePlayer(id) {
     this.players = this.players.filter((player) => player.id !== id);
-  }
 
-  renamePlayer(id, name) {
-    this.players = this.players.map((player) => {
-      if (player.id === id) {
-        player.name = name;
-      }
-      return player;
-    });
-  }
-
-  generateHead(id) {
-    this.players = this.players.map((player) => {
-      if (player.id === id) {
-        player.bighead = getRandomBighead();
-      }
-      return player;
-    });
+    if (this.getPlayersCount < 2) {
+      this.resetGame();
+    }
   }
 
   addScore(id) {
@@ -169,7 +190,7 @@ export class ObservableGame {
     this.guessedLetters.push(letter);
   }
 
-  getGuessedLetters() {
+  get getGuessedLetters() {
     //not the letters in word
     return this.guessedLetters
       .filter((letter) => !this.word.includes(letter))
