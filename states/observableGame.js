@@ -10,8 +10,6 @@ export class ObservableGame {
   game_started = false;
   word = "";
 
-  current_player = 0;
-
   constructor() {
     makeObservable(this, {
       players: observable,
@@ -179,13 +177,13 @@ export class ObservableGame {
   }
 
   guessLetter() {
-    this.current_player = (this.current_player + 1) % this.players.length;
+    let player = Math.floor(Math.random() * this.players.length);
 
     do {
       var letter = this.getRandomLetter();
     } while (this.guessedLetters.includes(letter));
 
-    this.addLetter(this.players[this.current_player], letter);
+    this.addLetter(this.players[player], letter);
   }
 
   getRandomLetter() {
